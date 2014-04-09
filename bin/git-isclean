@@ -1,0 +1,13 @@
+#!/bin/bash
+quiet=false
+if [ "$1" == "-q" ]; then
+    quiet=true
+fi
+
+if git status -s 2>&1 | egrep -q '^\s?(M|\?\?)'; then
+    $quiet || echo "dirty"
+    exit 1
+else
+    $quiet || echo "clean"
+    exit 0
+fi

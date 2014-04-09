@@ -1,0 +1,8 @@
+#!/bin/bash
+if [ -d "./.git" ]; then
+    git branch 2> /dev/null | egrep '^\*' | colrm 1 2
+    exit 0
+else
+    echo "N/A"
+    exit 1
+fi

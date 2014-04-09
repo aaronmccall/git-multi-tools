@@ -1,0 +1,28 @@
+#!/bin/bash
+if [[ $1 = /* ]]; then
+    echo "$1"
+    exit 0
+fi
+
+if [[ "$1" == "." ]]; then
+    echo "$PWD"
+    exit 0
+fi
+
+if [[ "$1" == ".." ]]; then
+    dirname "$PWD"
+    exit 0
+fi
+
+
+if [ -d "$1" ]; then
+    (cd "$1" && echo "$PWD")
+    exit 0
+fi
+
+if [ -e "$1" ]; then
+    file=$(basename "$1")
+    parent=$(dirname "$1")
+    parentabs=$(cd "$parent" && echo "$PWD")
+    printf "$parentabs/$file\n"
+fi

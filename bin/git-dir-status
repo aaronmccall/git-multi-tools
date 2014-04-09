@@ -1,0 +1,57 @@
+#!/bin/bash
+reset=$(tput sgr0)
+magenta=$(tput setaf 5)
+red=$(tput setaf 1)
+yellow=$(tput setaf 3)
+target="$PWD"
+verbose=0
+
+while (( $# )); do
+    if [ "$1" == "-v" ]; then
+        verbose=1
+    else
+        target=$(realpath $1)
+    fi
+    shift
+done
+
+echo -e "\nStatus of repos in $magenta$target$reset\n"
+
+(
+    cd "$target"
+    cc=0
+    echo -e "REPOSITORY|VERSION|BRANCH|STATUS"
+    for arg in $( ls ); do
+        if [ -d "$arg" ] && [ -d "$arg/.git" ]; then
+            cd "$arg"
+            ver=$(getversion)
+            branch=$(git current-branch)
+            repo_info=$(echo -e "$arg|$ver|$branch")
+
+            if git isclean -q; then
+                if [[ $verbose -gt 0 ]]; then
+                    echo -e "$repo_info|clean"
+                else
+                   ((cc++))
+                fi
+            else
+                echo -e "$repo_info|${red}dirty$reset"
+
+                if git status -s 2>&1 | egrep -q '^\s?M'; then
+                    echo -e "Changed:"
+                    echo "$yellow$(git status -s 2>&1 | egrep '^\s?M' | awk '{print " ", $2}')$reset"
+                fi
+                if git status -s | grep -q ??; then
+                    echo "New:"
+                    echo "$yellow$(git status -s | egrep '^\s*\?\?' | awk '{print " ", $2}')$reset"
+                fi
+            fi
+            cd ".."
+        fi
+    done;
+
+    if [[ $verbose -lt 1 ]]; then
+        echo "$cc clean repos"
+    fi
+) | column -t -s '|'
+echo -e -n "\n"
