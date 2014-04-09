@@ -77,7 +77,7 @@ Updating clean repos in /Users/me/project
 REPO    VERSION  BRANCH   RESULT
 repo1   0.2.1    master   Up to date!
 repo2   0.4.1    master   **dirty** Not updated.
-repo3   0.2.1    staging   Updated! Diff: 1d5ecda..5527a8f
+repo3   0.2.1    staging  Branch updated! Diff: 1d5ecda..5527a8f
 ```
 
 ## Helpers
