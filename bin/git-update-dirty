@@ -1,0 +1,45 @@
+#!/bin/bash
+branch=$(git rev-parse --abbrev-ref HEAD)
+if [ "$branch" == "HEAD" ]; then
+    echo "Detached. Aborted."
+    exit 1
+fi
+prev_head=$(git reflog show | grep "HEAD@{0}" | awk '{print $1}')
+tracking=$(git rev-parse --symbolic-full-name --abbrev-ref @{u})
+if  [ $? ] && [ ${#tracking} > 0 ]; then
+    remote=$(echo "$tracking" | cut -d \/ -f1)
+    branch=$(echo "$tracking" | cut -d \/ -f2)
+else
+    remote="origin"
+fi
+# stash successful
+if git stash > /dev/null ; then
+    pull_output=$(git pull "$remote" "$branch" 2>&1)
+    pull_success=$?
+    # pull was successful
+    if [ "$pull_success" == "0" ]; then
+        output=$(echo "$pull_output" | egrep '^Updating \w+\.\.\w+' | awk '{print $2}')
+    # pull was unsuccessful
+    else
+        output="Update from remote failed. Aborted."
+        git reset "$prev_head" > /dev/null
+    fi
+    # regardless of pull outcome, we need to put our WIP changes back
+    if git stash apply > /dev/null; then
+        git stash drop stash@{0} > /dev/null
+        echo "$output"
+        exit "$pull_success"
+    else
+        # stderror output
+        echo "Error re-applying working state." >&2
+        echo "Conflicts must be manually merged." >&2
+        echo "Stashed working state still in stash list." >&2
+        # stdout output
+        echo "$output"
+        exit 1
+    fi
+# stash was unsuccessful (should never happen)
+else
+    echo "Unable to stash WIP. Aborted."
+    exit 1
+fi
