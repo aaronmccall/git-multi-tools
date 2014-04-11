@@ -1,6 +1,11 @@
 #!/bin/bash
 if [ -d "./.git" ]; then
-    git branch 2> /dev/null | egrep '^\*' | colrm 1 2
+    branch=$(git rev-parse --abbrev-ref HEAD)
+    if [ "$branch" != "HEAD" ]; then
+        echo "$branch"
+    else
+        echo "detached@$(cat .git/HEAD | cut -c1-7)"
+    fi
     exit 0
 else
     echo "N/A"
